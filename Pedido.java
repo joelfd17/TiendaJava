@@ -1,0 +1,82 @@
+package Tienda;
+
+import java.time.LocalDate;
+import java.util.ArrayList;
+
+public class Pedido {
+
+    private String idPedido;
+    private Cliente clientePedido;
+    private LocalDate fechaPedido;
+    private ArrayList<LineaPedido> cestaCompra;
+
+    public Pedido(String idPedido, Cliente clientePedido, LocalDate fechaPedido) {
+        this.idPedido = idPedido;
+        this.clientePedido = clientePedido;
+        this.fechaPedido = fechaPedido;
+        this.cestaCompra = new ArrayList<>();
+    }
+
+    public void addLineaPedido(LineaPedido linea) {
+        cestaCompra.add(linea);
+    }
+
+    // Getters y setters
+    public String getIdPedido() {
+        return idPedido;
+    }
+
+    public void setIdPedido(String idPedido) {
+        this.idPedido = idPedido;
+    }
+
+    public Cliente getClientePedido() {
+        return clientePedido;
+    }
+
+    public void setClientePedido(Cliente clientePedido) {
+        this.clientePedido = clientePedido;
+    }
+
+    public LocalDate getFechaPedido() {
+        return fechaPedido;
+    }
+
+    public void setFechaPedido(LocalDate fechaPedido) {
+        this.fechaPedido = fechaPedido;
+    }
+
+    public ArrayList<LineaPedido> getCestaCompra() {
+        return cestaCompra;
+    }
+
+    @Override
+    public String toString() {
+        return "Pedido{" +
+                "idPedido='" + idPedido + '\'' +
+                ", clientePedido=" + clientePedido +
+                ", fechaPedido=" + fechaPedido +
+                ", cestaCompra=" + cestaCompra +
+                '}';
+    }
+
+    public Pedido(String idPedido, Cliente clientePedido,
+                  LocalDate fechaPedido, ArrayList<LineaPedido> cestaCompra) {
+        this.idPedido = idPedido;
+        this.clientePedido = clientePedido;
+        this.fechaPedido = fechaPedido;
+        this.cestaCompra = cestaCompra;
+    }
+
+    public double totalPedido() {
+
+        double total = 0;
+
+        for (LineaPedido l : cestaCompra) {
+            total += l.getArticulo().getPvp() * l.getUnidades();
+        }
+
+        return total;
+    }
+}
+
