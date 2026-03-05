@@ -1,17 +1,9 @@
 package Tienda;
 
-import java.io.File;
+import java.io.*;
 import java.time.LocalDate;
-import java.util.Scanner;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
-import java.util.Comparator;
-import java.util.TreeMap;
-import java.io.BufferedWriter;
-import java.io.FileWriter;
-import java.io.IOException;
 
 public class Tienda2026 {
 
@@ -31,7 +23,6 @@ public class Tienda2026 {
         t2026.cargaDatos();
         t2026.menu();
     }
-
 
     public void cargaDatos() {
         clientes.put("80580845T", new Cliente("80580845T", "ANA ", "658111111", "ana@gmail.com"));
@@ -205,6 +196,8 @@ public class Tienda2026 {
             System.out.println("4. Listado de pedidos");
             System.out.println("5. Ver ejemplos varios");
             System.out.println("6. Crear archivos");
+            System.out.println("7. Lee clientes");
+            System.out.println("8. Guarda articulos");
             System.out.println("0. Salir");
             System.out.print("Elige opción: ");
 
@@ -224,6 +217,8 @@ public class Tienda2026 {
                 }
                 case 5 -> ejemplosVarios();
                 case 6 -> guardaClientes();
+                case 7 -> leeClientes();
+                case 8 -> guardaArticulosPorSeccion();
                 case 0 -> System.out.println("Saliendo...");
                 default -> System.out.println("Opción no válida");
             }
@@ -336,47 +331,49 @@ public class Tienda2026 {
 
     private void guardaClientes(){
         //GUARDAMOS LOS CLIENTES LÍNEA A LÍNEA EN UN ARCHIVO .txt ESCRIBIENDO LOS DATOS SEGUN TENGAMOS DISPUESTO EN EL toString()
-        try (BufferedWriter bw = new BufferedWriter(new FileWriter("clientes.txt"))) {
+        try (BufferedWriter bw = new BufferedWriter(new FileWriter("D:/clientes.txt"))) {
             for (Cliente c:clientes.values()){
                 bw.write(c.toString());
                 bw.newLine();
             }
             System.out.println("Archivo D:/clientes.txt creado correctamente");
         } catch (IOException e) {
-            System.out.println("No se ha podido escribir el archivo D:/clientes.txt");
+            System.out.println("No se ha podido crear el archivo D:/clientes.txt");
         }
 
         //GUARDAMOS LOS CLIENTES LÍNEA A LÍNEA EN UN ARCHIVO .csv CON LOS VALORES DE LOS ATRIBUTOS SEPARADOS POR ,
 
-        try (BufferedWriter bw = new BufferedWriter(new FileWriter("clientes.csv"))) {
+        try (BufferedWriter bw = new BufferedWriter(new FileWriter("D:/clientes.csv"))) {
             for (Cliente c:clientes.values()){
                 bw.write(c.getIdCliente()+","+c.getNombre()+","+c.getTelefono()+","+c.getEmail()+"\n");
             }
             System.out.println("Archivo D:/clientes.csv creado correctamente");
         } catch (IOException e) {
-            System.out.println("No se ha podido escribir el archivo D:/clientes.csv");
+            System.out.println("No se ha podido crear el archivo D:/clientes.txt");
         }
     }
 
-    private void leeClientes() {
+    private void leeClientes(){
 
-        // SIMPLEMENTE LEER LAS LÍNEAS DEL ARCHIVO clientes.txt Y MOSTRARLAS POR PANTALLA
-        System.out.println("\nListado de Clientes del directamente desde clientes.txt\n");
-        try(Scanner scClientes=new Scanner(new File("D:/clientes.txt"))) {
+        //SIMPLEMENTE LEER LAS LÍNEAS DEL ARCHIVO clientes.txt Y MOSTRARLAS POR PANTALLA
+        System.out.println("\nListado de Clientes directamente desde clientes.txt\n");
+        try(Scanner scClientes=new Scanner(new File("D:/clientes.txt"))){
             while (scClientes.hasNextLine()){
                 System.out.println(scClientes.nextLine());
             }
+        }catch(IOException e){
+            System.out.println(e.toString());
         }
 
-        // CREAR UNA NUEVA COLECCIÓN DE TIPO HASHMAP A PARTIR DEL ARCHIVO clientes.csv
-        HashMap <String,Cliente> clientesAux = new HashMap<>();
-        try(Scanner scClientes=new Scanner(new File("D:/clientes.cs"))){
+        //CREAR UNA NUEVA COLECCIÓN DE TIPO HASHMAP A PARTIR DEL ARCHIVO clientes.csv
+        HashMap <String,Cliente> clientesAux = new HashMap();
+        try(Scanner scClientes=new Scanner(new File("D:/clientes.csv"))){
             while (scClientes.hasNextLine()){
                 String [] atributos = scClientes.nextLine().split("[,]");
                 Cliente c=new Cliente(atributos[0],atributos[1],atributos[2],atributos[3]);
                 clientesAux.put(atributos[0], c);
             }
-        } catch (IOException e) {
+        }catch(IOException e){
             System.out.println(e.toString());
         }
         System.out.println("\nListado de Clientes del nuevo HashMap clientesAux\n");
@@ -388,8 +385,8 @@ public class Tienda2026 {
         try (BufferedWriter bwPerifericos = new BufferedWriter(new FileWriter("D:/perifericos.csv"));
              BufferedWriter bwAlmacenamiento = new BufferedWriter(new FileWriter("D:/almacenamiento.csv"));
              BufferedWriter bwImpresoras = new BufferedWriter(new FileWriter("D:/impresoras.csv"));
-             BufferedWriter bwMonitores = new BufferedWriter(new FileWriter("D:/monitores.csv"));
-        ) {
+             BufferedWriter bwMonitores = new BufferedWriter(new FileWriter("D:/monitores.csv")))
+        {
             for (Articulo a : articulos.values()) {
                 switch (a.getIdArticulo().charAt(0)) {
                     case '1':
@@ -403,24 +400,31 @@ public class Tienda2026 {
                         break;
                     case '4':
                         bwMonitores.write(a.getIdArticulo()+","+a.getDescripcion()+","+a.getExistencias()+","+a.getPvp()+"\n");
+                        break;
                 }
             }
             System.out.println("Archivos creados correctamente");
         } catch (IOException e) {
             System.out.println("No se han podido crear los archivos");
-        }
-
-        //GUARDAMOS LOS CLIENTES LÍNEA A LÍNEA EN UN ARCHIVO .csv CON LOS VALORES DE LOS ATRIBUTOS SEPARADOS POR ,
-
-        try (BufferedWriter bw = new BufferedWriter(new FileWriter("clientes.csv"))) {
-            for (Cliente c:clientes.values()){
-                bw.write(c.getIdCliente()+","+c.getNombre()+","+c.getTelefono()+","+c.getEmail()+"\n");
-            }
-            System.out.println("Archivo D:/clientes.csv creado correctamente");
-        } catch (IOException e) {
-            System.out.println("No se ha podido escribir el archivo D:/clientes.csv");
+            File f=new File("D:/perifericos.csv");
+            f.delete();
+            f=new File("D:/almacenamiento.csv");
+            f.delete();
+            f=new File("D:/impresoras.csv");
+            f.delete();
+            f=new File("D:/monitores.csv");
+            f.delete();
         }
     }
+
+    /* private void leeArticulosPorSeccion() {
+
+        HashMap<String, Articulo> articulos
+
+        try (BufferedWriter){
+
+        }
+    } */
 
     // Getters para el test junit5
     public HashMap<String, Articulo> getArticulos() {
