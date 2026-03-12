@@ -1,8 +1,25 @@
 package Tienda;
 
-import java.io.*;
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.File;
+import java.io.IOException;
+import java.io.FileOutputStream;
+import java.io.FileInputStream;
+import java.io.ObjectOutputStream;
+import java.io.ObjectInputStream;
+import java.io.EOFException;
+import java.io.FileNotFoundException;
+
 import java.time.LocalDate;
-import java.util.*;
+
+import java.util.Scanner;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.TreeMap;
+import java.util.Comparator;
+
 import java.util.stream.Collectors;
 
 public class Tienda2026 {
@@ -186,41 +203,69 @@ public class Tienda2026 {
     }
 
     public void menu() {
+
         int opcion;
 
         do {
-            System.out.println("\n===== MENU TIENDA =====");
+            System.out.println("\n========== MENU TIENDA ==========");
             System.out.println("1. Alta de artículo");
             System.out.println("2. Nuevo pedido");
             System.out.println("3. Listado de artículos");
             System.out.println("4. Listado de pedidos");
-            System.out.println("5. Ver ejemplos varios");
-            System.out.println("6. Crear archivos");
-            System.out.println("7. Lee clientes");
-            System.out.println("8. Guarda articulos");
-            System.out.println("0. Salir");
-            System.out.print("Elige opción: ");
+            System.out.println("5. Ver ejemplos de Streams");
+
+            System.out.println("\n----- ARCHIVOS CLIENTES -----");
+            System.out.println("6. Guardar clientes en TXT y CSV");
+            System.out.println("7. Leer clientes desde archivos");
+
+            System.out.println("\n----- ARCHIVOS ARTICULOS -----");
+            System.out.println("8. Guardar artículos por sección (CSV)");
+            System.out.println("9. Leer artículos por sección");
+
+            System.out.println("\n----- COPIA DE SEGURIDAD -----");
+            System.out.println("10. Exportar colecciones (.dat)");
+            System.out.println("11. Importar colecciones (.dat)");
+
+            System.out.println("\n0. Salir");
+            System.out.print("Seleccione opción: ");
 
             opcion = sc.nextInt();
-            sc.nextLine(); // limpiar buffer
+            sc.nextLine();
 
             switch (opcion) {
+
                 case 1 -> altaArticulos();
+
                 case 2 -> nuevoPedido();
+
                 case 3 -> {
-                    System.out.println("\nARTÍCULOS:");
+                    System.out.println("\nLISTADO DE ARTICULOS");
                     articulos.values().forEach(System.out::println);
                 }
+
                 case 4 -> {
-                    System.out.println("\nPEDIDOS:");
+                    System.out.println("\nLISTADO DE PEDIDOS");
                     pedidos.forEach(System.out::println);
                 }
+
                 case 5 -> ejemplosVarios();
+
                 case 6 -> guardaClientes();
+
                 case 7 -> leeClientes();
+
                 case 8 -> guardaArticulosPorSeccion();
-                case 0 -> System.out.println("Saliendo...");
+
+                case 9 -> leeArticulosPorSeccion();
+
+                case 10 -> ExportarColecciones();
+
+                case 11 -> importarColecciones();
+
+                case 0 -> System.out.println("Saliendo del programa...");
+
                 default -> System.out.println("Opción no válida");
+
             }
 
         } while (opcion != 0);
@@ -382,10 +427,10 @@ public class Tienda2026 {
 
     private void guardaArticulosPorSeccion(){
         //GUARDAMOS LOS
-        try (BufferedWriter bwPerifericos = new BufferedWriter(new FileWriter("D:/perifericos.csv"));
-             BufferedWriter bwAlmacenamiento = new BufferedWriter(new FileWriter("D:/almacenamiento.csv"));
-             BufferedWriter bwImpresoras = new BufferedWriter(new FileWriter("D:/impresoras.csv"));
-             BufferedWriter bwMonitores = new BufferedWriter(new FileWriter("D:/monitores.csv")))
+        try (BufferedWriter bwPerifericos = new BufferedWriter(new FileWriter("perifericos.csv"));
+             BufferedWriter bwAlmacenamiento = new BufferedWriter(new FileWriter("almacenamiento.csv"));
+             BufferedWriter bwImpresoras = new BufferedWriter(new FileWriter("impresoras.csv"));
+             BufferedWriter bwMonitores = new BufferedWriter(new FileWriter("monitores.csv")))
         {
             for (Articulo a : articulos.values()) {
                 switch (a.getIdArticulo().charAt(0)) {
@@ -406,25 +451,150 @@ public class Tienda2026 {
             System.out.println("Archivos creados correctamente");
         } catch (IOException e) {
             System.out.println("No se han podido crear los archivos");
-            File f=new File("D:/perifericos.csv");
+            File f=new File("perifericos.csv");
             f.delete();
-            f=new File("D:/almacenamiento.csv");
+            f=new File("almacenamiento.csv");
             f.delete();
-            f=new File("D:/impresoras.csv");
+            f=new File("impresoras.csv");
             f.delete();
-            f=new File("D:/monitores.csv");
+            f=new File("monitores.csv");
             f.delete();
         }
     }
 
-    /* private void leeArticulosPorSeccion() {
+    private void leeArticulosPorSeccion(){
+        HashMap <String,Articulo> articulosAux = new HashMap();
+        String lineaArchivo; //para ir leyendo cada línea en los archivos
+        String [] atributos; //Para "romper" cada línea en los atributos separados por ,
 
-        HashMap<String, Articulo> articulos
+        try (Scanner scPerifericos = new Scanner(new File("perifericos.csv"));
+             Scanner scAlmacenamiento = new Scanner(new File("almacenamiento.csv"));
+             Scanner scImpresoras = new Scanner(new File("impresoras.csv"));
+             Scanner scMonitores = new Scanner(new File("monitores.csv")))
+        {
+            /* ADEMÁS DE MOSTRAR POR PANTALLA EL CONTENIDO DE LOS 4 ARCHIVOS CREADOS
+            APROVECHAMOS PARA RECONSTRUIR UN HashMap CON LOS ARTICULOS DE LOS 4 ARCHIVOS */
 
-        try (BufferedWriter){
+            System.out.println("\nPERIFERICOS:" );
+            while (scPerifericos.hasNextLine()){
+                //leo una línea del archivo
+                lineaArchivo = scPerifericos.nextLine();
+                //Imprimo línea por pantalla
+                System.out.println(lineaArchivo);
+                //con esa línea creamos un nuevo Articulo para añadir al HashMap articulosAux
+                atributos = lineaArchivo.split("[,]");
+                articulosAux.put(atributos[0],
+                        new Articulo(atributos[0],atributos[1],Integer.parseInt(atributos[2]),Double.parseDouble(atributos[3])));
 
+            }
+            System.out.println("\nALMACENAMIENTO:" );
+            while (scAlmacenamiento.hasNextLine()){
+                lineaArchivo = scAlmacenamiento.nextLine();
+                System.out.println(lineaArchivo);
+                atributos = lineaArchivo.split("[,]");
+                articulosAux.put(atributos[0],
+                        new Articulo(atributos[0],atributos[1],Integer.parseInt(atributos[2]),Double.parseDouble(atributos[3])));
+            }
+            System.out.println("\nIMPRESORAS:" );
+            while (scImpresoras.hasNextLine()){
+                lineaArchivo = scImpresoras.nextLine();
+                System.out.println(lineaArchivo);
+                atributos = lineaArchivo.split("[,]");
+                articulosAux.put(atributos[0],
+                        new Articulo(atributos[0],atributos[1],Integer.parseInt(atributos[2]),Double.parseDouble(atributos[3])));
+            }
+            System.out.println("\nMONITORES:" );
+            while (scMonitores.hasNextLine()){
+                lineaArchivo = scMonitores.nextLine();
+                System.out.println(lineaArchivo);
+                atributos = lineaArchivo.split("[,]");
+                articulosAux.put(atributos[0],
+                        new Articulo(atributos[0],atributos[1],Integer.parseInt(atributos[2]),Double.parseDouble(atributos[3])));
+
+            }
+        }catch(IOException e){
+            System.out.println(e.toString());
         }
-    } */
+
+        //MOSTRAMOS POR PANTALLA EL CONTENIDO DEL HASHMAP articulosAux QUE HEMOS IDO CREANDO CON LOS ARTICULOS DE LOS 4 ARCHIVOS
+        System.out.println("");
+        for (Articulo a:articulosAux.values()){
+            System.out.println(a);
+        }
+    }
+
+    public void ExportarColecciones() {
+        try (ObjectOutputStream oosArticulos = new ObjectOutputStream(new FileOutputStream("D:/articulos.dat"));
+             ObjectOutputStream oosClientes = new ObjectOutputStream(new FileOutputStream("D:/clientes.dat"));
+             ObjectOutputStream oosPedidos = new ObjectOutputStream (new FileOutputStream("D:/pedidos.dat"))) {
+
+            for (Articulo a : articulos.values()) {
+                oosArticulos.writeObject(a);
+            }
+            for (Cliente c:clientes.values()) {
+                oosClientes.writeObject(c);
+            }
+            for (Pedido p:pedidos){
+                oosPedidos.writeObject(p);
+            }
+            System.out.println("Copia de seguridad realizada con éxito.");
+
+        } catch (IOException ex) {
+            System.out.println("No se han podido crear los archivos correctamente, "
+                    + "revise unidades de almacenamiento e inténtelo de nuevo");
+            File f=new File("D:/articulos.dat");
+            f.delete();
+            f=new File("D:/clientes.dat");
+            f.delete();
+            f=new File("D:/pedidos.dat");
+            f.delete();
+        }
+    }
+
+    public void importarColecciones() {
+        /* HAY QUE LEER DESDE CADA ARCHIVO POR SEPARADO PORQUE SI INTENTAMOS METERLO TODO EN EL MISMO
+        TRY-CATCH AL LLEGAR AL FINAL DEL PRIMER ARCHIVO SE PRODUCE LA EOFException Y SÓLO SE
+        LEERÍA BIEN EL PRIMER ARCHIVO, EL RESTO NO */
+
+        try (ObjectInputStream oisArticulos = new ObjectInputStream(new FileInputStream("D:/articulos.dat"))){
+            Articulo a;
+            while ( (a=(Articulo)oisArticulos.readObject()) != null){
+                articulos.put(a.getIdArticulo(), a);
+            }
+        } catch (FileNotFoundException e) {
+            System.out.println(e.toString());
+        } catch (EOFException e){
+            System.out.println("Finalizada la lectura del archivo articulos.dat");
+        } catch (ClassNotFoundException | IOException e) {
+            System.out.println(e.toString());
+        }
+
+        try (ObjectInputStream oisClientes = new ObjectInputStream(new FileInputStream("D:/clientes.dat"))){
+            Cliente c;
+            while ( (c=(Cliente)oisClientes.readObject()) != null){
+                clientes.put(c.getIdCliente(), c);
+            }
+        } catch (FileNotFoundException e) {
+            System.out.println(e.toString());
+        } catch (EOFException e){
+            System.out.println("Finalizada la lectura del archivo clientes.dat");
+        } catch (ClassNotFoundException | IOException e) {
+            System.out.println(e.toString());
+        }
+
+        try (ObjectInputStream oisPedidos = new ObjectInputStream(new FileInputStream("D:/pedidos.dat"))){
+            Pedido p;
+            while ( (p=(Pedido)oisPedidos.readObject()) != null){
+                pedidos.add(p);
+            }
+        } catch (FileNotFoundException e) {
+            System.out.println(e.toString());
+        } catch (EOFException e){
+            System.out.println("Finalizada la lectura del archivo pedidos.dat");
+        } catch (ClassNotFoundException | IOException e) {
+            System.out.println(e.toString());
+        }
+    }
 
     // Getters para el test junit5
     public HashMap<String, Articulo> getArticulos() {
